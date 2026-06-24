@@ -1,0 +1,123 @@
+plugins {
+	id 'java-library'
+	id 'maven-publish'
+	id 'net.neoforged.moddev' version '2.0.141'
+}
+
+Properties mergedProperties = new Properties()
+mergedProperties.load(new FileInputStream("$project.rootDir/../common.properties"))
+mergedProperties.load(new FileInputStream("$project.rootDir/gradle.properties"))
+mergedProperties.each { prop -> project.ext.set(prop.key, prop.value) }
+project.ext.set("mergedProperties", mergedProperties)
+def resourceProperties = mergedProperties.collectEntries { key, value -> [(key): value] }
+resourceProperties.put("minecraft_version_range", "[${project.minecraft_version_min},${project.minecraft_version_max})")
+resourceProperties.put("neo_version", project.neo_version)
+
+group = project.dev_group
+version = project.mod_version
+
+base {
+	archivesName = "${project.archives_base_name}-neoforge"
+}
+
+def releaseArchiveBaseName = "${project.archives_base_name}-${project.mod_version}+${project.minecraft_version_min}+neoforge"
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+
+repositories {
+	mavenCentral()
+}
+
+neoForge {
+	version = project.neo_version
+
+	runs {
+		client {
+			client()
+		}
+
+		server {
+			server()
+			programArgument '--nogui'
+		}
+	}
+
+	mods {
+		"minecraft_tunnel" {
+			sourceSet(sourceSets.main)
+		}
+	}
+}
+
+configurations {
+	runtimeClasspath.extendsFrom localRuntime
+}
+
+dependencies {
+	compileOnly "io.github.llamalad7:mixinextras-common:${project.mixin_extras_version}"
+	annotationProcessor "io.github.llamalad7:mixinextras-common:${project.mixin_extras_version}"
+	jarJar(implementation("io.github.llamalad7:mixinextras-neoforge:${project.mixin_extras_version}")) {
+		version {
+			strictly "[${project.mixin_extras_version},)"
+			prefer project.mixin_extras_version
+		}
+	}
+
+	compileOnly 'com.google.code.findbugs:jsr305:3.0.1'
+	compileOnly "io.netty:netty-codec-http:${project.netty_version}"
+	compileOnly "io.netty:netty-codec-http2:${project.netty_version}"
+	implementation("dnsjava:dnsjava:${project.dnsjava_version}") {
+		exclude group: 'org.slf4j'
+	}
+	jarJar(implementation("io.netty:netty-codec-http2:${project.netty_version}")) {
+		exclude group: 'io.netty'
+		version {
+			strictly "[${project.netty_version},5.0)"
+			prefer project.netty_version
+		}
+	}
+	jarJar("dnsjava:dnsjava:${project.dnsjava_version}") {
+		exclude group: 'org.slf4j'
+		version {
+			strictly "[${project.dnsjava_version},4.0)"
+			prefer project.dnsjava_version
+		}
+	}
+}
+
+var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
+	inputs.properties resourceProperties
+	expand resourceProperties
+	from "src/main/templates"
+	into "build/generated/sources/modMetadata"
+}
+sourceSets.main.resources.srcDir generateModMetadata
+neoForge.ideSyncTask generateModMetadata
+
+sourceSets {
+	main {
+		java {
+			srcDir "../src/main/java"
+		}
+		resources {
+			srcDir "../src/main/resources"
+		}
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.encoding = "UTF-8"
+	options.release = 25
+}
+
+java {
+	withSourcesJar()
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
+}
+
+tasks.named('jar') {
+	archiveBaseName.set(releaseArchiveBaseName)
+	archiveVersion.set("")
+	archiveClassifier.set("")
+}

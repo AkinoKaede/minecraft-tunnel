@@ -1,0 +1,107 @@
+plugins {
+	id 'java-library'
+	id 'com.gradleup.shadow' version '9.2.2'
+	id 'io.papermc.paperweight.userdev' version '2.0.0-SNAPSHOT'
+}
+
+Properties mergedProperties = new Properties()
+mergedProperties.load(new FileInputStream("$project.rootDir/../common.properties"))
+mergedProperties.load(new FileInputStream("$project.rootDir/gradle.properties"))
+mergedProperties.each { prop -> project.ext.set(prop.key, prop.value) }
+project.ext.set("mergedProperties", mergedProperties)
+def resourceProperties = mergedProperties.collectEntries { key, value -> [(key): value] }
+
+group = project.dev_group
+version = project.mod_version
+
+base {
+	archivesName = "${project.archives_base_name}-ignite"
+}
+
+def releaseArchiveBaseName = "${project.archives_base_name}-${project.mod_version}+${project.minecraft_version_min}+ignite"
+
+repositories {
+	mavenCentral()
+	maven {
+		name = 'PaperMC'
+		url = 'https://repo.papermc.io/repository/maven-public/'
+	}
+	maven {
+		name = 'Sponge'
+		url = 'https://repo.spongepowered.org/maven/'
+	}
+}
+
+dependencies {
+	paperweight.paperDevBundle(project.server_dev_bundle_version)
+
+	compileOnly "space.vectrix.ignite:ignite-api:${project.ignite_version}"
+	compileOnly "org.spongepowered:mixin:${project.mixin_version}"
+	compileOnly "io.github.llamalad7:mixinextras-common:${project.mixin_extras_version}"
+	annotationProcessor "io.github.llamalad7:mixinextras-common:${project.mixin_extras_version}"
+
+	compileOnly 'com.google.code.findbugs:jsr305:3.0.1'
+	implementation "io.netty:netty-codec-http:${project.netty_version}"
+	implementation "io.netty:netty-codec-http2:${project.netty_version}"
+}
+
+processResources {
+	inputs.property "mod_version", project.version
+
+	filesMatching("ignite.mod.json") {
+		expand resourceProperties
+	}
+}
+
+sourceSets {
+	main {
+		java {
+			srcDir "../src/main/java"
+			exclude "com/akinokaede/mctunnel/client/**"
+			exclude "com/akinokaede/mctunnel/mixin/ClientConnectionMixin.java"
+			exclude "com/akinokaede/mctunnel/mixin/ConnectScreenMixin.java"
+			exclude "com/akinokaede/mctunnel/mixin/ConnectScreenThreadMixin.java"
+			exclude "com/akinokaede/mctunnel/mixin/ConnectionChannelInitializerMixin.java"
+			exclude "com/akinokaede/mctunnel/mixin/ConnectionMixin.java"
+			exclude "com/akinokaede/mctunnel/mixin/ServerAddressMixin.java"
+			exclude "com/akinokaede/mctunnel/mixin/ServerConnectionListenerMixin.java"
+			exclude "com/akinokaede/mctunnel/mixin/ServerStatusPingerMixin.java"
+			exclude "com/akinokaede/mctunnel/transport/websocket/WebSocketClientTunnel.java"
+			exclude "com/akinokaede/mctunnel/transport/websocket/WebSocketClientTunnelProtocol.java"
+			exclude "com/akinokaede/mctunnel/transport/httpupgrade/HttpUpgradeClientTunnel.java"
+			exclude "com/akinokaede/mctunnel/transport/httpupgrade/HttpUpgradeClientTunnelProtocol.java"
+			exclude "com/akinokaede/mctunnel/transport/grpc/GrpcClientTunnel.java"
+			exclude "com/akinokaede/mctunnel/transport/grpc/GrpcClientTunnelProtocol.java"
+			exclude "com/akinokaede/mctunnel/transport/tls/TlsClientTunnel.java"
+			exclude "com/akinokaede/mctunnel/transport/tls/TlsClientTunnelProtocol.java"
+		}
+		resources {
+			setSrcDirs(["src/main/resources"])
+		}
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.encoding = "UTF-8"
+	options.release = 25
+}
+
+java {
+	withSourcesJar()
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
+}
+
+tasks.jar {
+	archiveClassifier.set("dev")
+}
+
+tasks.shadowJar {
+	archiveBaseName.set(releaseArchiveBaseName)
+	archiveVersion.set("")
+	archiveClassifier.set("")
+}
+
+tasks.build {
+	dependsOn tasks.shadowJar
+}

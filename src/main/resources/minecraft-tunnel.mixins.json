@@ -1,0 +1,19 @@
+{
+  "required": true,
+  "package": "com.akinokaede.mctunnel.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "refmap": "minecraft-tunnel.refmap.json",
+  "mixins": [
+    "ConnectionMixin",
+    "ConnectionChannelInitializerMixin",
+    "ServerConnectionListenerMixin"
+  ],
+  "client": [
+    "ClientConnectionMixin",
+    "ConnectScreenMixin",
+    "ConnectScreenThreadMixin",
+    "ServerAddressMixin",
+    "ServerStatusPingerMixin"
+  ],
+  "minVersion": "0.8"
+}

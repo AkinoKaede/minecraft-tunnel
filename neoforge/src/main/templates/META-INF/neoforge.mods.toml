@@ -1,0 +1,28 @@
+license="Apache-2.0"
+
+[[mods]]
+modId="minecraft_tunnel"
+version="${mod_version}"
+displayName="Minecraft Tunnel"
+authors="Kaede Akino"
+description='''Tunnel transports for Minecraft connections, including TLS-wrapped vanilla TCP, WebSocket, HTTP Upgrade, and gRPC.'''
+
+[[mixins]]
+config="minecraft-tunnel.mixins.json"
+
+[[mixins]]
+config="minecraft-tunnel-neoforge.mixins.json"
+
+[[dependencies.minecraft_tunnel]]
+	modId="neoforge"
+	type="required"
+	versionRange="[${neo_version},)"
+	ordering="NONE"
+	side="BOTH"
+
+[[dependencies.minecraft_tunnel]]
+	modId="minecraft"
+	type="required"
+	versionRange="${minecraft_version_range}"
+	ordering="NONE"
+	side="BOTH"

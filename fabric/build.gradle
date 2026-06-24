@@ -1,0 +1,76 @@
+plugins {
+	id 'net.fabricmc.fabric-loom' version '1.17-SNAPSHOT'
+	id 'maven-publish'
+}
+
+Properties mergedProperties = new Properties()
+mergedProperties.load(new FileInputStream("$project.rootDir/../common.properties"))
+mergedProperties.load(new FileInputStream("$project.rootDir/gradle.properties"))
+mergedProperties.each { prop -> project.ext.set(prop.key, prop.value) }
+project.ext.set("mergedProperties", mergedProperties)
+
+group = project.dev_group
+version = project.mod_version
+
+base {
+	archivesName = project.archives_base_name
+}
+
+def releaseArchiveBaseName = "${project.archives_base_name}-${project.mod_version}+${project.minecraft_version_min}+fabric"
+
+repositories {
+	mavenCentral()
+}
+
+loom {
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+	compileOnly 'com.google.code.findbugs:jsr305:3.0.1'
+	include(implementation(group: 'io.netty', name: 'netty-codec-http', version: project.netty_version))
+	include(implementation(group: 'io.netty', name: 'netty-codec-http2', version: project.netty_version))
+	include(implementation("dnsjava:dnsjava:${project.dnsjava_version}") {
+		exclude group: 'org.slf4j'
+	})
+}
+
+processResources {
+	inputs.property "version", project.version
+	inputs.property "minecraft_version_min", project.minecraft_version_min
+	inputs.property "loader_version_min", project.loader_version_min
+
+	filesMatching("fabric.mod.json") {
+		expand project.mergedProperties
+	}
+}
+
+sourceSets {
+	main {
+		java {
+			srcDir "../src/main/java"
+		}
+		resources {
+			setSrcDirs(["../src/main/resources", "src/main/resources"])
+		}
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.encoding = "UTF-8"
+	options.release = 25
+}
+
+java {
+	withSourcesJar()
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
+}
+
+tasks.named('jar', Jar) {
+	archiveBaseName.set(releaseArchiveBaseName)
+	archiveVersion.set("")
+	archiveClassifier.set("")
+}

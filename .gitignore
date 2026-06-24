@@ -1,0 +1,32 @@
+# macOS
+.DS_Store
+
+# Gradle
+.gradle/
+build/
+**/build/
+
+# IDEs and editors
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs and crash reports
+logs/
+*.log
+crash-reports/
+
+# Minecraft run directories
+run/
+**/run/
+
+# Java build output
+out/
+*.class
+
+# Local environment
+.env
+.env.*

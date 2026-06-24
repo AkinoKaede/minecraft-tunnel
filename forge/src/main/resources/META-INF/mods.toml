@@ -1,0 +1,27 @@
+modLoader="javafml"
+loaderVersion="[${forge_loader_version_min},)"
+license="Apache-2.0"
+
+[[mods]]
+modId="minecraft_tunnel"
+version="${mod_version}"
+displayName="Minecraft Tunnel"
+authors="Kaede Akino"
+description='''Tunnel transports for Minecraft connections, including TLS-wrapped vanilla TCP, WebSocket, HTTP Upgrade, and gRPC.'''
+
+[[mixins]]
+config="minecraft-tunnel.mixins.json"
+
+[[dependencies.minecraft_tunnel]]
+	modId="forge"
+	mandatory=true
+	versionRange="[${forge_loader_version_min},)"
+	ordering="NONE"
+	side="BOTH"
+
+[[dependencies.minecraft_tunnel]]
+	modId="minecraft"
+	mandatory=true
+	versionRange="[${minecraft_version_min},${minecraft_version_max})"
+	ordering="NONE"
+	side="BOTH"

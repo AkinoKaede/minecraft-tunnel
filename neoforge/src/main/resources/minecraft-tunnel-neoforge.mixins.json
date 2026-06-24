@@ -1,0 +1,9 @@
+{
+  "required": true,
+  "package": "com.akinokaede.mctunnel.neoforge.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "NetworkFiltersMixin"
+  ],
+  "minVersion": "0.8"
+}

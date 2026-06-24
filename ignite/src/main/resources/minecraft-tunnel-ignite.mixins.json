@@ -1,0 +1,10 @@
+{
+  "required": true,
+  "package": "com.akinokaede.mctunnel.mixin.ignite",
+  "compatibilityLevel": "JAVA_25",
+  "mixins": [
+    "IgniteConnectionMixin",
+    "IgniteServerConnectionListenerMixin"
+  ],
+  "minVersion": "0.8"
+}

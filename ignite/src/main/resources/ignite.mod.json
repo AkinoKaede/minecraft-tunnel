@@ -1,0 +1,7 @@
+{
+  "id": "minecraft_tunnel",
+  "version": "${mod_version}",
+  "mixins": [
+    "minecraft-tunnel-ignite.mixins.json"
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "minecraft_tunnel",
+  "version": "${mod_version}",
+  "name": "Minecraft Tunnel",
+  "description": "Tunnel transports for Minecraft connections, including TLS-wrapped vanilla TCP, WebSocket, HTTP Upgrade, and gRPC.",
+  "authors": [
+    "Kaede Akino"
+  ],
+  "license": "Apache-2.0",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.akinokaede.mctunnel.fabric.MinecraftTunnelMod"
+    ],
+    "client": [
+      "com.akinokaede.mctunnel.fabric.MinecraftTunnelMod"
+    ]
+  },
+  "mixins": [
+    "minecraft-tunnel.mixins.json"
+  ],
+  "depends": {
+    "minecraft": [">=${minecraft_version_min}", "<${minecraft_version_max}"],
+    "fabricloader": ">=${loader_version_min}"
+  }
+}

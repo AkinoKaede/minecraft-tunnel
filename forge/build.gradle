@@ -1,0 +1,126 @@
+plugins {
+	id 'java'
+	id 'maven-publish'
+	id 'net.minecraftforge.gradle' version '[7.0.17,8)'
+	id 'net.minecraftforge.jarjar' version '0.2.3'
+}
+
+Properties mergedProperties = new Properties()
+mergedProperties.load(new FileInputStream("$project.rootDir/../common.properties"))
+mergedProperties.load(new FileInputStream("$project.rootDir/gradle.properties"))
+mergedProperties.each { prop -> project.ext.set(prop.key, prop.value) }
+project.ext.set("mergedProperties", mergedProperties)
+def resourceProperties = mergedProperties.collectEntries { key, value -> [(key): value] }
+
+group = project.dev_group
+version = project.mod_version
+
+base {
+	archivesName = "${project.archives_base_name}-forge"
+}
+
+def releaseArchiveBaseName = "${project.archives_base_name}-${project.mod_version}+${project.minecraft_version_min}+forge"
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+
+jarJar.register() {
+	archiveClassifier = null
+}
+
+minecraft {
+	runs {
+		configureEach {
+			workingDir = layout.projectDirectory.dir('run')
+			systemProperty 'eventbus.api.strictRuntimeChecks', 'true'
+		}
+
+		register('client')
+
+		register('server') {
+			args '--nogui'
+		}
+	}
+}
+
+repositories {
+	minecraft.mavenizer(it)
+	maven fg.forgeMaven
+	maven fg.minecraftLibsMaven
+	mavenCentral()
+	maven {
+		name = 'Sponge'
+		url = 'https://repo.spongepowered.org/maven/'
+	}
+}
+
+dependencies {
+	implementation minecraft.dependency("net.minecraftforge:forge:${project.forge_version}")
+	annotationProcessor 'net.minecraftforge:eventbus-validator:7.0.1'
+
+	compileOnly "io.github.llamalad7:mixinextras-common:${project.mixin_extras_version}"
+	annotationProcessor "io.github.llamalad7:mixinextras-common:${project.mixin_extras_version}"
+	implementation "io.github.llamalad7:mixinextras-forge:${project.mixin_extras_version}"
+
+	compileOnly 'com.google.code.findbugs:jsr305:3.0.1'
+	compileOnly "io.netty:netty-codec-http:${project.netty_version}"
+	compileOnly "io.netty:netty-codec-http2:${project.netty_version}"
+	implementation("dnsjava:dnsjava:${project.dnsjava_version}") {
+		exclude group: 'org.slf4j'
+	}
+	jarJar "io.github.llamalad7:mixinextras-forge:${project.mixin_extras_version}"
+	jarJar("io.netty:netty-codec-http2:${project.netty_version}") {
+		exclude group: 'io.netty'
+	}
+	jarJar("dnsjava:dnsjava:${project.dnsjava_version}") {
+		exclude group: 'org.slf4j'
+	}
+}
+
+processResources {
+	inputs.properties resourceProperties
+
+	filesMatching("META-INF/mods.toml") {
+		expand resourceProperties
+	}
+}
+
+sourceSets {
+	main {
+		java {
+			srcDir "../src/main/java"
+		}
+		resources {
+			setSrcDirs(["../src/main/resources", "src/main/resources"])
+		}
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.encoding = "UTF-8"
+	options.release = 25
+}
+
+java {
+	withSourcesJar()
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
+}
+
+tasks.named('jar') {
+	archiveClassifier = 'slim'
+	manifest {
+		attributes([
+				"MixinConfigs": "minecraft-tunnel.mixins.json"
+		])
+	}
+}
+
+tasks.named('jarJar') {
+	archiveBaseName.set(releaseArchiveBaseName)
+	archiveVersion.set("")
+	archiveClassifier.set("")
+}
+
+tasks.build {
+	dependsOn tasks.jarJar
+}
