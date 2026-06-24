@@ -38,10 +38,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up JDK 25
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '25'
@@ -70,7 +70,7 @@ jobs:
         working-directory: ${{ matrix.loader }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: minecraft-tunnel-${{ matrix.loader }}
           path: ${{ matrix.loader }}/build/libs/minecraft-tunnel-*+${{ matrix.loader }}.jar
@@ -78,7 +78,7 @@ jobs:
 
       - name: Publish GitHub release
         if: github.event_name == 'release'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: ${{ matrix.loader }}/build/libs/minecraft-tunnel-*+${{ matrix.loader }}.jar
           tag_name: ${{ github.event.release.tag_name }}
