@@ -34,7 +34,6 @@ final class WebSocketClientTunnel extends WebSocketBinaryBridge {
 	private ChannelPromise handshakeFuture;
 
 	private WebSocketClientTunnel(ClientTunnelEndpoint endpoint) {
-		super("S->C", "C->S");
 		DefaultHttpHeaders headers = new DefaultHttpHeaders();
 		headers.set("Host", endpoint.httpHost());
 		headers.set("User-Agent", TunnelUserAgent.value());

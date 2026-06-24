@@ -12,9 +12,6 @@ public final class MinecraftTunnel {
 	private static final boolean DEBUG =
 			Boolean.parseBoolean(System.getProperty("mctunnel.debug", "false"));
 
-	public static final boolean DUMP_BYTES =
-			Boolean.parseBoolean(System.getProperty("mctunnel.dumpBytes", "false"));
-
 	private static boolean initialized;
 
 	private MinecraftTunnel() {
@@ -29,7 +26,8 @@ public final class MinecraftTunnel {
 		TunnelProtocols.registerIfEnabled(new WebSocketTunnelProtocol(), TunnelConfig::serverProtocolEnabled);
 		TunnelProtocols.registerIfEnabled(new HttpUpgradeTunnelProtocol(), TunnelConfig::serverProtocolEnabled);
 		initialized = true;
-		info("Initialized with " + TunnelProtocols.protocolCount() + " server tunnel protocol(s)");
+		info("Initialized with " + TunnelProtocols.protocolCount() + " server tunnel protocol(s); vanilla TCP "
+				+ (TunnelConfig.vanillaEnabled() ? "enabled" : "disabled"));
 	}
 
 	public static boolean debugEnabled() {

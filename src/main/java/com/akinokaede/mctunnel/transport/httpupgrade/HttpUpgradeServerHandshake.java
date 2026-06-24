@@ -4,6 +4,7 @@ import com.akinokaede.mctunnel.MinecraftTunnel;
 import com.akinokaede.mctunnel.config.TunnelConfig;
 import com.akinokaede.mctunnel.transport.TrustedProxyHeaders;
 import com.akinokaede.mctunnel.transport.TunnelConnectionMetadata;
+import com.akinokaede.mctunnel.transport.TunnelRequestLog;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
@@ -55,6 +56,13 @@ final class HttpUpgradeServerHandshake extends ChannelInboundHandlerAdapter {
 		if (proxiedRemoteAddress != null) {
 			metadata.put("proxied.remote_address", proxiedRemoteAddress.toString());
 		}
+		TunnelRequestLog.accepted(
+				HttpUpgradeTunnelProtocol.ID,
+				request.uri(),
+				request.headers().get(HttpHeaderNames.HOST),
+				ctx.channel().remoteAddress(),
+				proxiedRemoteAddress,
+				request.headers().get(HttpHeaderNames.USER_AGENT));
 		metadataConsumer.accept(new TunnelConnectionMetadata(
 				HttpUpgradeTunnelProtocol.ID,
 				metadata,

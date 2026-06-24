@@ -60,9 +60,6 @@ final class HttpUpgradeClientTunnel extends io.netty.channel.ChannelDuplexHandle
 	@Override
 	public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
 		if (upgraded) {
-			if (msg instanceof ByteBuf byteBuf && MinecraftTunnel.debugEnabled()) {
-				MinecraftTunnel.debug("HTTPUpgrade C->S raw (" + byteBuf.readableBytes() + " bytes)");
-			}
 			ctx.write(msg, promise);
 			return;
 		}
@@ -78,9 +75,6 @@ final class HttpUpgradeClientTunnel extends io.netty.channel.ChannelDuplexHandle
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 		if (upgraded) {
-			if (msg instanceof ByteBuf byteBuf && MinecraftTunnel.debugEnabled()) {
-				MinecraftTunnel.debug("HTTPUpgrade S->C raw (" + byteBuf.readableBytes() + " bytes)");
-			}
 			ctx.fireChannelRead(msg);
 			return;
 		}

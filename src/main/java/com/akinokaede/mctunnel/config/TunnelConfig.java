@@ -1,11 +1,10 @@
 package com.akinokaede.mctunnel.config;
 
 public final class TunnelConfig {
-	public static final boolean DISABLE_VANILLA_TCP =
-			Boolean.parseBoolean(System.getProperty("mctunnel.disableVanillaTCP", "false"));
+	public static final String VANILLA_PROTOCOL_ID = "vanilla";
 
 	public static final String SERVER_PROTOCOLS =
-			System.getProperty("mctunnel.protocol", System.getProperty("mctunnel.protocols", "all"));
+			System.getProperty("mctunnel.protocol", System.getProperty("mctunnel.protocols", "websocket,httpupgrade,vanilla"));
 
 	public static final String SERVER_ENDPOINT =
 			blankToNull(System.getProperty("mctunnel.endpoint"));
@@ -22,14 +21,31 @@ public final class TunnelConfig {
 	private TunnelConfig() {
 	}
 
+	public static boolean vanillaEnabled() {
+		return serverProtocolEnabled(VANILLA_PROTOCOL_ID);
+	}
+
 	public static boolean serverProtocolEnabled(String protocolId) {
-		if (SERVER_PROTOCOLS == null || SERVER_PROTOCOLS.isBlank()) {
-			return true;
+		if (SERVER_PROTOCOLS == null) {
+			return false;
 		}
 
+		boolean grpcEnabled = containsProtocol("grpc");
+		if (grpcEnabled) {
+			return "grpc".equals(protocolId);
+		}
+
+		if ("grpc".equals(protocolId)) {
+			return false;
+		}
+
+		return containsProtocol(protocolId);
+	}
+
+	private static boolean containsProtocol(String protocolId) {
 		for (String value : SERVER_PROTOCOLS.split(",")) {
 			String normalized = normalizeProtocol(value);
-			if ("all".equals(normalized) || protocolId.equals(normalized)) {
+			if (protocolId.equals(normalized)) {
 				return true;
 			}
 		}

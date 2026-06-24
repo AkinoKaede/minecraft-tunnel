@@ -4,7 +4,6 @@ import com.akinokaede.mctunnel.MinecraftTunnel;
 import com.akinokaede.mctunnel.config.TunnelConfig;
 import com.akinokaede.mctunnel.transport.TunnelConnectionMetadata;
 import com.akinokaede.mctunnel.transport.TunnelProtocols;
-import com.akinokaede.mctunnel.transport.grpc.GrpcTunnelProtocol;
 import com.akinokaede.mctunnel.transport.websocket.WebSocketServerHandshake;
 import com.akinokaede.mctunnel.transport.websocket.WebSocketHandshakeValidator;
 import com.akinokaede.mctunnel.transport.websocket.WebSocketTunnelProtocol;
@@ -56,12 +55,6 @@ public final class HttpUpgradeServerSniffer extends ByteToMessageDecoder {
 		in.resetReaderIndex();
 
 		String methodPrefix = new String(bytes, StandardCharsets.US_ASCII);
-		if ("PRI".equalsIgnoreCase(methodPrefix) && TunnelProtocols.isRegistered(GrpcTunnelProtocol.ID)) {
-			MinecraftTunnel.debug("Incoming HTTP/2 tunnel candidate");
-			ctx.pipeline().remove(this);
-			return;
-		}
-
 		if ("GET".equalsIgnoreCase(methodPrefix)) {
 			MinecraftTunnel.debug("Incoming HTTP Upgrade tunnel candidate");
 			ctx.pipeline().replace(this, CODEC, new HttpServerCodec());
@@ -70,14 +63,13 @@ public final class HttpUpgradeServerSniffer extends ByteToMessageDecoder {
 			return;
 		}
 
-		if (TunnelConfig.DISABLE_VANILLA_TCP) {
-			MinecraftTunnel.debug("Rejecting standard Minecraft TCP connection");
+		if (TunnelConfig.vanillaEnabled()) {
+			MinecraftTunnel.debug("Incoming vanilla TCP connection");
+			ctx.pipeline().remove(this);
+		} else {
+			MinecraftTunnel.debug("Rejecting connection because vanilla TCP is not enabled");
 			ctx.close();
-			return;
 		}
-
-		MinecraftTunnel.debug("Incoming vanilla TCP connection");
-		ctx.pipeline().remove(this);
 	}
 
 	private static final class Router extends io.netty.channel.ChannelInboundHandlerAdapter {

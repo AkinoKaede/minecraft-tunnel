@@ -15,6 +15,6 @@ public final class GrpcTunnelProtocol implements TunnelProtocol {
 
 	@Override
 	public void installServer(ChannelPipeline pipeline, Consumer<TunnelConnectionMetadata> metadataConsumer) {
-		GrpcServerSniffer.install(pipeline, metadataConsumer);
+		GrpcServerPipeline.install(pipeline, metadataConsumer);
 	}
 }

@@ -112,6 +112,7 @@ final class GrpcClientTunnel extends ChannelDuplexHandler {
 	public void flush(ChannelHandlerContext ctx) {
 		if (streamActive && streamChannel != null) {
 			streamChannel.flush();
+			ctx.flush();
 		}
 	}
 
@@ -132,8 +133,10 @@ final class GrpcClientTunnel extends ChannelDuplexHandler {
 
 	private void writeGrpcData(ChannelHandlerContext ctx, ByteBuf byteBuf, ChannelPromise promise) {
 		try {
-			if (MinecraftTunnel.debugEnabled()) {
-				MinecraftTunnel.debug("gRPC C->S (" + byteBuf.readableBytes() + " bytes)");
+			if (streamChannel == null || !streamChannel.isActive()) {
+				promise.setFailure(new IllegalStateException("gRPC stream is closed"));
+				ctx.close();
+				return;
 			}
 			ByteBuf encoded = GrpcMessageCodec.encode(ctx.alloc(), byteBuf);
 			streamChannel.write(new DefaultHttp2DataFrame(encoded, false), streamChannel.newPromise())
@@ -160,9 +163,6 @@ final class GrpcClientTunnel extends ChannelDuplexHandler {
 			if (decoded == null) {
 				return;
 			}
-			if (MinecraftTunnel.debugEnabled()) {
-				MinecraftTunnel.debug("gRPC S->C (" + decoded.readableBytes() + " bytes)");
-			}
 			ctx.fireChannelRead(decoded);
 		}
 	}
@@ -178,6 +178,7 @@ final class GrpcClientTunnel extends ChannelDuplexHandler {
 			writeGrpcData(ctx, (ByteBuf) pending.msg(), pending.promise());
 		}
 		streamChannel.flush();
+		ctx.flush();
 	}
 
 	private Http2Headers requestHeaders() {
@@ -238,6 +239,9 @@ final class GrpcClientTunnel extends ChannelDuplexHandler {
 				try {
 					CharSequence status = headersFrame.headers().status();
 					if (status == null) {
+						if (headersFrame.isEndStream()) {
+							closeParent();
+						}
 						return;
 					}
 					if (!"200".contentEquals(status)) {
@@ -253,20 +257,39 @@ final class GrpcClientTunnel extends ChannelDuplexHandler {
 
 			if (msg instanceof Http2DataFrame dataFrame) {
 				appendInbound(parentCtx, dataFrame.content());
+				if (dataFrame.isEndStream()) {
+					closeParent();
+				}
 				ReferenceCountUtil.release(dataFrame);
 				return;
 			}
 
 			if (msg instanceof Http2ResetFrame resetFrame) {
-				throw new IllegalStateException("gRPC stream was reset: " + resetFrame.errorCode());
+				MinecraftTunnel.debug("gRPC stream was reset: " + resetFrame.errorCode());
+				ReferenceCountUtil.release(resetFrame);
+				closeParent();
+				return;
 			}
 
 			ReferenceCountUtil.release(msg);
 		}
 
 		@Override
+		public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+			closeParent();
+			super.channelInactive(ctx);
+		}
+
+		@Override
 		public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
 			GrpcClientTunnel.this.exceptionCaught(parentCtx, cause);
+		}
+
+		private void closeParent() {
+			streamActive = false;
+			if (parentCtx.channel().isOpen()) {
+				parentCtx.close();
+			}
 		}
 	}
 }

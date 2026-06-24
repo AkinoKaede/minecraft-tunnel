@@ -1,6 +1,6 @@
 # Minecraft Tunnel
 
-English | [中文（中国）](RADME_ZH-CN.md)
+English | [中文（中国）](README_ZH-CN.md)
 
 Minecraft Tunnel adds tunnel transports for Minecraft Java Edition
 connections. It can carry the normal Minecraft protocol over WebSocket, HTTP
@@ -18,7 +18,7 @@ client connection flow simple.
 - gRPC bidirectional stream support with `grpc://` and `grpc+h2c://`
   addresses.
 - TLS-wrapped vanilla TCP support with `tls://` addresses.
-- Optional server-side restriction to tunnel-only traffic.
+- Server-side protocol selection, including explicit vanilla TCP enablement.
 - Optional trusted proxy support for `X-Forwarded-For` and `X-Real-IP`.
 
 ## Compatibility
@@ -60,6 +60,11 @@ through a DNS `URI` record at `_minecraft._tcp.<hostname>`.
 
 Minecraft Tunnel activates when the server address starts with one of its
 supported URI schemes.
+
+For most HTTP-aware deployments, prefer HTTP Upgrade. It uses the same
+HTTP/1.1 Upgrade path that WebSocket-capable CDNs and reverse proxies commonly
+support, then carries raw Minecraft bytes after the upgrade with less framing
+overhead than WebSocket.
 
 ### WebSocket
 
@@ -157,8 +162,8 @@ priority values first, then higher weight values.
 
 ## Server Behavior
 
-The Minecraft server port can accept normal Minecraft TCP and enabled tunnel
-protocols on the same listener.
+The Minecraft server port accepts the protocols listed in `mctunnel.protocol`.
+By default this is normal Minecraft TCP plus WebSocket and HTTP Upgrade.
 
 WebSocket requests are accepted as standard WebSocket binary streams. HTTP
 Upgrade requests are accepted as raw byte streams after `101 Switching
@@ -167,10 +172,9 @@ long-lived bidirectional stream.
 
 For `grpc://`, terminate TLS and ALPN in front of the Minecraft server and
 forward HTTP/2 cleartext to the Minecraft port. For direct cleartext HTTP/2,
-use `grpc+h2c://`.
-
-Set `mctunnel.disableVanillaTCP=true` if the server should reject normal
-Minecraft TCP and accept only enabled tunnel protocols.
+use `grpc+h2c://`. gRPC mode is exclusive: if `grpc` appears in
+`mctunnel.protocol`, the server installs the gRPC HTTP/2 pipeline directly and
+does not accept vanilla TCP, WebSocket, or HTTP Upgrade on that listener.
 
 ## Configuration
 
@@ -178,19 +182,17 @@ Configuration is provided with Java system properties.
 
 | Property | Side | Default | Description |
 | --- | --- | --- | --- |
-| `mctunnel.protocol` | Server | `all` | Comma-separated list of enabled server tunnel protocols. Supported values: `all`, `websocket`, `ws`, `httpupgrade`, `grpc`. |
+| `mctunnel.protocol` | Server | `websocket,httpupgrade,vanilla` | Comma-separated list of enabled server protocols. Supported values: `websocket`, `ws`, `httpupgrade`, `vanilla`, `grpc`. If `grpc` is present, it is exclusive and other values are ignored. |
 | `mctunnel.endpoint` | Server | any path | If set, only this exact tunnel path is accepted. For gRPC, either `/Service` or `/Service/Tun` matches the same method. |
-| `mctunnel.disableVanillaTCP` | Server | `false` | Close standard Minecraft TCP connections and accept only enabled tunnel protocols. |
 | `mctunnel.trustedProxies` | Server | empty | Comma-separated trusted proxy IP/CIDR ranges allowed to supply `X-Forwarded-For` or `X-Real-IP`. Example: `127.0.0.1/32,10.0.0.0/8,::1/128`. |
 | `mctunnel.userAgent` | Client | generated | Override the `User-Agent` sent by HTTP-based client tunnels. By default it is generated as `MinecraftTunnel/<mod version> Minecraft/<game version> <loader>/<loader version> Netty/<netty version>`. |
 | `mctunnel.maxFramePayloadLength` | Both | `65536` | Maximum WebSocket frame payload length. |
 | `mctunnel.debug` | Both | `false` | Enable debug logs. |
-| `mctunnel.dumpBytes` | Both | `false` | Dump tunnel bytes when debug logging is enabled. |
 
 Example:
 
 ```bash
-java -Dmctunnel.protocol=websocket,grpc \
+java -Dmctunnel.protocol=websocket,httpupgrade,vanilla \
   -Dmctunnel.endpoint=/mc \
   -Dmctunnel.trustedProxies=127.0.0.1/32,10.0.0.0/8 \
   -jar server.jar

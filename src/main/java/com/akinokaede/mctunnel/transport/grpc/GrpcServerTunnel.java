@@ -4,6 +4,7 @@ import com.akinokaede.mctunnel.MinecraftTunnel;
 import com.akinokaede.mctunnel.config.TunnelConfig;
 import com.akinokaede.mctunnel.transport.TrustedProxyHeaders;
 import com.akinokaede.mctunnel.transport.TunnelConnectionMetadata;
+import com.akinokaede.mctunnel.transport.TunnelRequestLog;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -14,11 +15,11 @@ import io.netty.handler.codec.http2.DefaultHttp2Headers;
 import io.netty.handler.codec.http2.DefaultHttp2HeadersFrame;
 import io.netty.handler.codec.http2.Http2DataFrame;
 import io.netty.handler.codec.http2.Http2Frame;
+import io.netty.handler.codec.http2.Http2FrameStream;
 import io.netty.handler.codec.http2.Http2Headers;
 import io.netty.handler.codec.http2.Http2HeadersFrame;
 import io.netty.handler.codec.http2.Http2ResetFrame;
 import io.netty.handler.codec.http2.Http2StreamFrame;
-import io.netty.handler.codec.http2.Http2FrameStream;
 import io.netty.util.ReferenceCountUtil;
 import java.util.ArrayDeque;
 import java.util.LinkedHashMap;
@@ -87,6 +88,13 @@ final class GrpcServerTunnel extends ChannelDuplexHandler {
 	}
 
 	@Override
+	public void flush(ChannelHandlerContext ctx) {
+		if (streamActive && stream != null) {
+			ctx.flush();
+		}
+	}
+
+	@Override
 	public void handlerRemoved(ChannelHandlerContext ctx) {
 		if (inboundBuffer != null) {
 			inboundBuffer.release();
@@ -131,6 +139,13 @@ final class GrpcServerTunnel extends ChannelDuplexHandler {
 			if (proxiedRemoteAddress != null) {
 				metadata.put("proxied.remote_address", proxiedRemoteAddress.toString());
 			}
+			TunnelRequestLog.accepted(
+					GrpcTunnelProtocol.ID,
+					headerValue(headersFrame.headers().path()),
+					headerValue(headersFrame.headers().authority()),
+					ctx.channel().remoteAddress(),
+					proxiedRemoteAddress,
+					headerValue(headersFrame.headers().get(HttpHeaderNames.USER_AGENT)));
 			metadataConsumer.accept(new TunnelConnectionMetadata(
 					GrpcTunnelProtocol.ID,
 					metadata,
@@ -179,9 +194,6 @@ final class GrpcServerTunnel extends ChannelDuplexHandler {
 
 	private void writeGrpcData(ChannelHandlerContext ctx, ByteBuf byteBuf, ChannelPromise promise) {
 		try {
-			if (MinecraftTunnel.debugEnabled()) {
-				MinecraftTunnel.debug("gRPC S->C (" + byteBuf.readableBytes() + " bytes)");
-			}
 			ByteBuf encoded = GrpcMessageCodec.encode(ctx.alloc(), byteBuf);
 			ctx.write(new DefaultHttp2DataFrame(encoded, false).stream(stream), promise);
 		} finally {
@@ -199,9 +211,6 @@ final class GrpcServerTunnel extends ChannelDuplexHandler {
 			ByteBuf decoded = GrpcMessageCodec.tryDecode(ctx.alloc(), inboundBuffer);
 			if (decoded == null) {
 				return;
-			}
-			if (MinecraftTunnel.debugEnabled()) {
-				MinecraftTunnel.debug("gRPC C->S (" + decoded.readableBytes() + " bytes)");
 			}
 			ctx.fireChannelRead(decoded);
 		}
@@ -221,6 +230,10 @@ final class GrpcServerTunnel extends ChannelDuplexHandler {
 			attributes.put("header." + header.getKey().toString().toLowerCase(Locale.ROOT), header.getValue().toString());
 		}
 		return attributes;
+	}
+
+	private static String headerValue(CharSequence value) {
+		return value == null ? null : value.toString();
 	}
 
 	private record PendingWrite(Object msg, ChannelPromise promise) {
