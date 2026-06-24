@@ -30,6 +30,13 @@ client connection flow simple.
 
 Minecraft version range: `>=26.1.2 <26.2`.
 
+Ignite support is server-only. Ignite is a Mixin loader for Spigot/Paper, and
+the project is positioned as a Mixin loader for Paper/Velocity/Spigot/Hytale.
+The Ignite artifact lets server owners install Minecraft Tunnel's server-side
+mixins without running a Fabric, Forge, or NeoForge server. Players still need
+a Fabric, Forge, or NeoForge client jar when they connect with explicit tunnel
+addresses or DNS URI tunnel discovery.
+
 ## Installation
 
 Install the matching jar for your loader.
