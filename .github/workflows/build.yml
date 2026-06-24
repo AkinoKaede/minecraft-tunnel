@@ -1,0 +1,78 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build ${{ matrix.loader }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        loader:
+          - fabric
+          - forge
+          - neoforge
+          - ignite
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+          cache-dependency-path: |
+            ${{ matrix.loader }}/gradle/wrapper/gradle-wrapper.properties
+            ${{ matrix.loader }}/build.gradle
+            ${{ matrix.loader }}/settings.gradle
+            ${{ matrix.loader }}/gradle.properties
+            common.properties
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
+        working-directory: ${{ matrix.loader }}
+
+      - name: Build
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "${GITHUB_EVENT_NAME:-}" == "release" ]]; then
+            ./gradlew --no-daemon build
+          else
+            ./gradlew --no-daemon build -Parchive_commit_suffix="$(git rev-parse --short HEAD)"
+          fi
+        working-directory: ${{ matrix.loader }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: minecraft-tunnel-${{ matrix.loader }}
+          path: ${{ matrix.loader }}/build/libs/minecraft-tunnel-*+${{ matrix.loader }}.jar
+          if-no-files-found: error
+
+      - name: Publish GitHub release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ matrix.loader }}/build/libs/minecraft-tunnel-*+${{ matrix.loader }}.jar
+          tag_name: ${{ github.event.release.tag_name }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true

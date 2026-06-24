@@ -20,7 +20,9 @@ base {
 	archivesName = "${project.archives_base_name}-neoforge"
 }
 
-def releaseArchiveBaseName = "${project.archives_base_name}-${project.mod_version}+${project.minecraft_version_min}+neoforge"
+def archiveCommitSuffix = project.findProperty("archive_commit_suffix")
+def archiveVersionName = "${project.mod_version}${archiveCommitSuffix ? "-${archiveCommitSuffix}" : ""}"
+def releaseArchiveBaseName = "${project.archives_base_name}-${archiveVersionName}+${project.minecraft_version_min}+neoforge"
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 
