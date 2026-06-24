@@ -103,7 +103,7 @@ public final class TunnelUserAgent {
 					TunnelUserAgent.class.getClassLoader());
 			Object metadata = containerClass.getMethod("getMetadata").invoke(container);
 			Object version = metadataClass.getMethod("getVersion").invoke(metadata);
-			return loaderValue("FabricLoader", version == null ? null : version.toString());
+			return loaderValue("Fabric", version == null ? null : version.toString());
 		} catch (ClassNotFoundException | IllegalAccessException | NoSuchMethodException
 				 | InvocationTargetException | LinkageError | RuntimeException ignored) {
 			return null;
