@@ -2,13 +2,13 @@
 
 English | [中文（中国）](README_ZH-CN.md)
 
-Minecraft Tunnel adds tunnel transports for Minecraft Java Edition
-connections. It can carry the normal Minecraft protocol over WebSocket, HTTP
+Minecraft Tunnel adds alternative transports for Minecraft Java Edition
+connections. It carries the regular Minecraft protocol over WebSocket, HTTP
 Upgrade, gRPC over HTTP/2, or TLS-wrapped vanilla TCP.
 
-The mod is designed for servers that need to place Minecraft traffic behind
-reverse proxies, TLS endpoints, or HTTP-aware infrastructure while keeping the
-client connection flow simple.
+It is built for servers that want to run Minecraft traffic behind reverse
+proxies, TLS endpoints, or HTTP-capable infrastructure without making players
+deal with a complicated connection flow.
 
 ## Features
 
@@ -17,9 +17,9 @@ client connection flow simple.
   addresses.
 - gRPC bidirectional stream support with `grpc://` and `grpc+h2c://`
   addresses.
-- TLS-wrapped vanilla TCP support with `tls://` addresses.
-- Server-side protocol selection, including explicit vanilla TCP enablement.
-- Optional trusted proxy support for `X-Forwarded-For` and `X-Real-IP`.
+- TLS-wrapped vanilla TCP with `tls://` addresses.
+- Server-side protocol selection, including explicit vanilla TCP support.
+- Optional trusted proxy handling for `X-Forwarded-For` and `X-Real-IP`.
 
 ## Compatibility
 
@@ -32,20 +32,20 @@ client connection flow simple.
 
 Minecraft version range: `>=26.1.2 <26.2`.
 
-Ignite support is server-only. Ignite is a Mixin loader for Spigot/Paper, and
-the project is positioned as a Mixin loader for Paper/Velocity/Spigot/Hytale.
-The Ignite artifact lets server owners install Minecraft Tunnel's server-side
-mixins without running a Fabric, Forge, or NeoForge server. Players still need
-a Fabric, Forge, or NeoForge client jar when they connect with explicit tunnel
-addresses or DNS URI tunnel discovery.
+Ignite support is server-only. Ignite is a Mixin loader for Spigot/Paper, with
+broader positioning around Paper, Velocity, Spigot, and Hytale. With the Ignite
+artifact, Minecraft Tunnel's server-side mixins can be installed without
+switching to a Fabric, Forge, or NeoForge server. Players still need a
+Fabric, Forge, or NeoForge client jar when they connect with explicit tunnel
+addresses or DNS URI discovery.
 
 ## Installation
 
 Install the matching jar for your loader.
 
-For Fabric, Forge, or NeoForge clients, place the loader-specific client jar in
-the client's `mods` directory. The same loader-specific jar can also be used on
-Fabric, Forge, or NeoForge servers.
+For Fabric, Forge, or NeoForge clients, place the matching jar in the client's
+`mods` directory. The same loader-specific jar can also be used on Fabric,
+Forge, or NeoForge servers.
 
 For Ignite-backed servers, install Ignite first, then place the Ignite jar in
 the server's Ignite mods directory.
@@ -53,7 +53,7 @@ the server's Ignite mods directory.
 Vanilla addresses such as `example.com:25565` keep using the normal Minecraft
 TCP connection path.
 
-Vanilla-style hostnames without an explicit port can also opt into a tunnel
+Vanilla-style hostnames without an explicit port can also discover a tunnel
 through a DNS `URI` record at `_minecraft._tcp.<hostname>`.
 
 ## Client Addresses
@@ -61,10 +61,10 @@ through a DNS `URI` record at `_minecraft._tcp.<hostname>`.
 Minecraft Tunnel activates when the server address starts with one of its
 supported URI schemes.
 
-For most HTTP-aware deployments, prefer HTTP Upgrade. It uses the same
-HTTP/1.1 Upgrade path that WebSocket-capable CDNs and reverse proxies commonly
-support, then carries raw Minecraft bytes after the upgrade with less framing
-overhead than WebSocket.
+For most HTTP-capable deployments, HTTP Upgrade is the preferred option. It
+uses the same HTTP/1.1 Upgrade path commonly supported by WebSocket-capable CDNs
+and reverse proxies, then carries raw Minecraft bytes after the upgrade with
+less framing overhead than WebSocket.
 
 ### WebSocket
 
@@ -121,7 +121,7 @@ tls://example.com:25565
 bytes inside the TLS stream. It does not add HTTP, WebSocket, or gRPC framing.
 
 Use this form when the remote endpoint accepts TLS and forwards the decrypted
-stream to a vanilla Minecraft listener.
+stream to a normal Minecraft listener.
 
 ## Host, SNI, and Routing
 
@@ -144,17 +144,17 @@ value is used as TLS SNI and the second value is used as the HTTP host.
 
 ## DNS URI Records
 
-Instead of asking players to type a tunnel URI, publish a DNS `URI` record for
-the Minecraft service name:
+To let players use a normal hostname instead of typing a tunnel URI, publish a
+DNS `URI` record for the Minecraft service name:
 
 ```text
-_minecraft._tcp.example.com. 300 IN URI 10 1 "wss://edge.example.com/MinecraftTunnel"
+_minecraft._tcp.example.com. 300 IN URI 10 1 "httpupgrades://edge.example.com/MinecraftTunnel"
 ```
 
 Players can then connect to `example.com`. If the record target is a supported
 tunnel URI, Minecraft Tunnel uses it as though the player entered it directly.
 Explicit tunnel URIs still take precedence, and addresses with an explicit port
-such as `example.com:25565` keep the vanilla connection path.
+such as `example.com:25565` continue to use the vanilla connection path.
 
 The URI record target supports the same schemes and Host/SNI user-info syntax
 documented above. When multiple URI records exist, the client tries lower
