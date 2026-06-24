@@ -23,10 +23,10 @@ client connection flow simple.
 
 | Loader | Side | Artifact |
 | --- | --- | --- |
-| Fabric | Client and server | `minecraft-tunnel-0.1.0+26.1.2+fabric.jar` |
-| Forge | Client and server | `minecraft-tunnel-0.1.0+26.1.2+forge.jar` |
-| NeoForge | Client and server | `minecraft-tunnel-0.1.0+26.1.2+neoforge.jar` |
-| Ignite | Server | `minecraft-tunnel-0.1.0+26.1.2+ignite.jar` |
+| Fabric | Client and server | `minecraft-tunnel-0.1.1+26.1.2+fabric.jar` |
+| Forge | Client and server | `minecraft-tunnel-0.1.1+26.1.2+forge.jar` |
+| NeoForge | Client and server | `minecraft-tunnel-0.1.1+26.1.2+neoforge.jar` |
+| Ignite | Server | `minecraft-tunnel-0.1.1+26.1.2+ignite.jar` |
 
 Minecraft version range: `>=26.1.2 <26.2`.
 
@@ -220,10 +220,10 @@ cd ignite
 The main jars are written to:
 
 ```text
-fabric/build/libs/minecraft-tunnel-0.1.0+26.1.2+fabric.jar
-forge/build/libs/minecraft-tunnel-0.1.0+26.1.2+forge.jar
-neoforge/build/libs/minecraft-tunnel-0.1.0+26.1.2+neoforge.jar
-ignite/build/libs/minecraft-tunnel-0.1.0+26.1.2+ignite.jar
+fabric/build/libs/minecraft-tunnel-0.1.1+26.1.2+fabric.jar
+forge/build/libs/minecraft-tunnel-0.1.1+26.1.2+forge.jar
+neoforge/build/libs/minecraft-tunnel-0.1.1+26.1.2+neoforge.jar
+ignite/build/libs/minecraft-tunnel-0.1.1+26.1.2+ignite.jar
 ```
 
 ## License
