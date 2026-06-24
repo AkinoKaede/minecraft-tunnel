@@ -82,5 +82,5 @@ jobs:
         with:
           files: ${{ matrix.loader }}/build/libs/minecraft-tunnel-*+${{ matrix.loader }}.jar
           tag_name: ${{ github.event.release.tag_name }}
-          generate_release_notes: true
+          generate_release_notes: false
           fail_on_unmatched_files: true
