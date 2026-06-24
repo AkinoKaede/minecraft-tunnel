@@ -2,6 +2,7 @@ package com.akinokaede.mctunnel.transport.websocket;
 
 import com.akinokaede.mctunnel.MinecraftTunnel;
 import com.akinokaede.mctunnel.transport.ClientTunnelEndpoint;
+import com.akinokaede.mctunnel.transport.TunnelUserAgent;
 import com.akinokaede.mctunnel.config.TunnelConfig;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.Channel;
@@ -36,6 +37,7 @@ final class WebSocketClientTunnel extends WebSocketBinaryBridge {
 		super("S->C", "C->S");
 		DefaultHttpHeaders headers = new DefaultHttpHeaders();
 		headers.set("Host", endpoint.httpHost());
+		headers.set("User-Agent", TunnelUserAgent.value());
 		this.handshaker = WebSocketClientHandshakerFactory.newHandshaker(
 				endpoint.uri(),
 				WebSocketVersion.V13,

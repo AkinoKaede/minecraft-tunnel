@@ -43,8 +43,13 @@ processResources {
 	inputs.property "version", project.version
 	inputs.property "minecraft_version_min", project.minecraft_version_min
 	inputs.property "loader_version_min", project.loader_version_min
+	inputs.property "mod_version", project.mod_version
 
 	filesMatching("fabric.mod.json") {
+		expand project.mergedProperties
+	}
+
+	filesMatching("mctunnel-version.properties") {
 		expand project.mergedProperties
 	}
 }

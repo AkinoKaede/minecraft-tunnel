@@ -13,6 +13,9 @@ public final class TunnelConfig {
 	public static final String TRUSTED_PROXIES =
 			System.getProperty("mctunnel.trustedProxies", "");
 
+	public static final String USER_AGENT =
+			blankToNull(System.getProperty("mctunnel.userAgent"));
+
 	public static final int MAX_FRAME_PAYLOAD_LENGTH =
 			parseInt(System.getProperty("mctunnel.maxFramePayloadLength"), 65536);
 

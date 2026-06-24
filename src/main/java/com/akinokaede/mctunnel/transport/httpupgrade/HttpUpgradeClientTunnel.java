@@ -3,6 +3,7 @@ package com.akinokaede.mctunnel.transport.httpupgrade;
 import com.akinokaede.mctunnel.MinecraftTunnel;
 import com.akinokaede.mctunnel.transport.ClientTls;
 import com.akinokaede.mctunnel.transport.ClientTunnelEndpoint;
+import com.akinokaede.mctunnel.transport.TunnelUserAgent;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
@@ -48,6 +49,7 @@ final class HttpUpgradeClientTunnel extends io.netty.channel.ChannelDuplexHandle
 				HttpMethod.GET,
 				rawPathAndQuery(endpoint));
 		request.headers().set(HttpHeaderNames.HOST, endpoint.httpHost());
+		request.headers().set(HttpHeaderNames.USER_AGENT, TunnelUserAgent.value());
 		request.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.UPGRADE);
 		request.headers().set(HttpHeaderNames.UPGRADE, "websocket");
 		MinecraftTunnel.info("Starting HTTPUpgrade handshake");

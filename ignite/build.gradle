@@ -70,13 +70,14 @@ sourceSets {
 			exclude "com/akinokaede/mctunnel/mixin/ServerStatusPingerMixin.java"
 			exclude "com/akinokaede/mctunnel/transport/websocket/WebSocketClientTunnel.java"
 			exclude "com/akinokaede/mctunnel/transport/websocket/WebSocketClientTunnelProtocol.java"
-			exclude "com/akinokaede/mctunnel/transport/httpupgrade/HttpUpgradeClientTunnel.java"
-			exclude "com/akinokaede/mctunnel/transport/httpupgrade/HttpUpgradeClientTunnelProtocol.java"
-			exclude "com/akinokaede/mctunnel/transport/grpc/GrpcClientTunnel.java"
-			exclude "com/akinokaede/mctunnel/transport/grpc/GrpcClientTunnelProtocol.java"
-			exclude "com/akinokaede/mctunnel/transport/tls/TlsClientTunnel.java"
-			exclude "com/akinokaede/mctunnel/transport/tls/TlsClientTunnelProtocol.java"
-		}
+				exclude "com/akinokaede/mctunnel/transport/httpupgrade/HttpUpgradeClientTunnel.java"
+				exclude "com/akinokaede/mctunnel/transport/httpupgrade/HttpUpgradeClientTunnelProtocol.java"
+				exclude "com/akinokaede/mctunnel/transport/grpc/GrpcClientTunnel.java"
+				exclude "com/akinokaede/mctunnel/transport/grpc/GrpcClientTunnelProtocol.java"
+				exclude "com/akinokaede/mctunnel/transport/tls/TlsClientTunnel.java"
+				exclude "com/akinokaede/mctunnel/transport/tls/TlsClientTunnelProtocol.java"
+				exclude "com/akinokaede/mctunnel/transport/TunnelUserAgent.java"
+			}
 		resources {
 			setSrcDirs(["src/main/resources"])
 		}

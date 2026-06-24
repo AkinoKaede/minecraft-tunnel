@@ -182,6 +182,7 @@ Configuration is provided with Java system properties.
 | `mctunnel.endpoint` | Server | any path | If set, only this exact tunnel path is accepted. For gRPC, either `/Service` or `/Service/Tun` matches the same method. |
 | `mctunnel.disableVanillaTCP` | Server | `false` | Close standard Minecraft TCP connections and accept only enabled tunnel protocols. |
 | `mctunnel.trustedProxies` | Server | empty | Comma-separated trusted proxy IP/CIDR ranges allowed to supply `X-Forwarded-For` or `X-Real-IP`. Example: `127.0.0.1/32,10.0.0.0/8,::1/128`. |
+| `mctunnel.userAgent` | Client | generated | Override the `User-Agent` sent by HTTP-based client tunnels. By default it is generated as `MinecraftTunnel/<mod version> Minecraft/<game version> <loader>/<loader version> Netty/<netty version>`. |
 | `mctunnel.maxFramePayloadLength` | Both | `65536` | Maximum WebSocket frame payload length. |
 | `mctunnel.debug` | Both | `false` | Enable debug logs. |
 | `mctunnel.dumpBytes` | Both | `false` | Dump tunnel bytes when debug logging is enabled. |

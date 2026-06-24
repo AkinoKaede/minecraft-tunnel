@@ -2,6 +2,7 @@ package com.akinokaede.mctunnel.transport.grpc;
 
 import com.akinokaede.mctunnel.MinecraftTunnel;
 import com.akinokaede.mctunnel.transport.ClientTunnelEndpoint;
+import com.akinokaede.mctunnel.transport.TunnelUserAgent;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.ChannelDuplexHandler;
@@ -188,7 +189,7 @@ final class GrpcClientTunnel extends ChannelDuplexHandler {
 		headers.set("content-type", "application/grpc");
 		headers.set("te", "trailers");
 		headers.set("grpc-encoding", "identity");
-		headers.set("user-agent", "minecraft-tunnel");
+		headers.set("user-agent", TunnelUserAgent.value());
 		return headers;
 	}
 
