@@ -1,5 +1,7 @@
 # Minecraft Tunnel
 
+English | [中文（中国）](RADME_ZH-CN.md)
+
 Minecraft Tunnel adds tunnel transports for Minecraft Java Edition
 connections. It can carry the normal Minecraft protocol over WebSocket, HTTP
 Upgrade, gRPC over HTTP/2, or TLS-wrapped vanilla TCP.
