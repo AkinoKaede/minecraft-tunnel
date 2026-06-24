@@ -41,8 +41,6 @@ public final class TunnelProtocols {
 	}
 
 	public static void installServer(ChannelPipeline pipeline, Consumer<TunnelConnectionMetadata> metadataConsumer) {
-		for (TunnelProtocol protocol : PROTOCOLS) {
-			protocol.installServer(pipeline, metadataConsumer);
-		}
+		ServerProtocolSniffer.install(pipeline, metadataConsumer);
 	}
 }

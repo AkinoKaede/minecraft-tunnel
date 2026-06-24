@@ -2,11 +2,11 @@ package com.akinokaede.mctunnel.transport.httpupgrade;
 
 import com.akinokaede.mctunnel.MinecraftTunnel;
 import com.akinokaede.mctunnel.config.TunnelConfig;
+import com.akinokaede.mctunnel.transport.HttpTunnelResponses;
 import com.akinokaede.mctunnel.transport.TrustedProxyHeaders;
 import com.akinokaede.mctunnel.transport.TunnelConnectionMetadata;
 import com.akinokaede.mctunnel.transport.TunnelRequestLog;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
@@ -17,7 +17,6 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.LastHttpContent;
-import io.netty.util.CharsetUtil;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -43,8 +42,13 @@ final class HttpUpgradeServerHandshake extends ChannelInboundHandlerAdapter {
 	}
 
 	private void handleRequest(ChannelHandlerContext ctx, HttpRequest request) {
-		if (!isUpgradeRequest(request) || !isConfiguredEndpoint(request.uri())) {
-			writeDefaultHttpResponse(ctx);
+		if (!isUpgradeRequest(request)) {
+			HttpTunnelResponses.writeDefaultAndClose(ctx);
+			return;
+		}
+
+		if (!isConfiguredEndpoint(request.uri())) {
+			HttpTunnelResponses.writeNotFoundAndClose(ctx);
 			return;
 		}
 
@@ -108,17 +112,6 @@ final class HttpUpgradeServerHandshake extends ChannelInboundHandlerAdapter {
 			attributes.put("header." + header.getKey().toLowerCase(Locale.ROOT), header.getValue());
 		}
 		return attributes;
-	}
-
-	private void writeDefaultHttpResponse(ChannelHandlerContext ctx) {
-		DefaultFullHttpResponse response = new DefaultFullHttpResponse(
-				HttpVersion.HTTP_1_1,
-				HttpResponseStatus.OK,
-				Unpooled.copiedBuffer("Minecraft Tunnel", CharsetUtil.UTF_8));
-		response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=UTF-8");
-		response.headers().set(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
-		response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE);
-		ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
 	}
 
 	private static void removeIfPresent(ChannelHandlerContext ctx, String name) {

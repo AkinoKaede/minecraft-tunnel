@@ -76,6 +76,11 @@ dependencies {
 	jarJar("dnsjava:dnsjava:${project.dnsjava_version}") {
 		exclude group: 'org.slf4j'
 	}
+
+	testImplementation "org.junit.jupiter:junit-jupiter:${project.junit_version}"
+	testImplementation "io.netty:netty-codec-http:${project.netty_version}"
+	testImplementation "io.netty:netty-codec-http2:${project.netty_version}"
+	testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 }
 
 processResources {
@@ -99,11 +104,21 @@ sourceSets {
 			setSrcDirs(["../src/main/resources", "src/main/resources"])
 		}
 	}
+	test {
+		java {
+			srcDir "../src/test/java"
+		}
+	}
 }
 
 tasks.withType(JavaCompile).configureEach {
 	options.encoding = "UTF-8"
 	options.release = 25
+}
+
+tasks.withType(Test).configureEach {
+	useJUnitPlatform()
+	systemProperty "mctunnel.endpoint", "/MinecraftTunnel"
 }
 
 java {

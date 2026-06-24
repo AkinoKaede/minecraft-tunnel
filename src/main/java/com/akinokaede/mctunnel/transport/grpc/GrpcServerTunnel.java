@@ -122,6 +122,11 @@ final class GrpcServerTunnel extends ChannelDuplexHandler {
 				return;
 			}
 
+			if (!isConfiguredEndpoint(headersFrame.headers())) {
+				writeNotFound(ctx, headersFrame);
+				return;
+			}
+
 			if (!isTunnelRequest(headersFrame.headers())) {
 				writeGrpcRejection(ctx, headersFrame, "Unsupported gRPC tunnel request");
 				return;
@@ -170,17 +175,21 @@ final class GrpcServerTunnel extends ChannelDuplexHandler {
 
 	private boolean isTunnelRequest(Http2Headers headers) {
 		CharSequence method = headers.method();
-		CharSequence path = headers.path();
 		CharSequence contentType = headers.get(HttpHeaderNames.CONTENT_TYPE);
 		return "POST".contentEquals(method)
-				&& path != null
-				&& isConfiguredEndpoint(path.toString())
 				&& contentType != null
 				&& contentType.toString().toLowerCase(Locale.ROOT).startsWith("application/grpc");
 	}
 
-	private boolean isConfiguredEndpoint(String requestUri) {
-		return GrpcPaths.matchesConfiguredEndpoint(requestUri, TunnelConfig.SERVER_ENDPOINT);
+	private boolean isConfiguredEndpoint(Http2Headers headers) {
+		CharSequence path = headers.path();
+		return path != null && GrpcPaths.matchesConfiguredEndpoint(path.toString(), TunnelConfig.SERVER_ENDPOINT);
+	}
+
+	private void writeNotFound(ChannelHandlerContext ctx, Http2HeadersFrame request) {
+		Http2Headers headers = new DefaultHttp2Headers()
+				.status("404");
+		ctx.writeAndFlush(new DefaultHttp2HeadersFrame(headers, true).stream(request.stream()));
 	}
 
 	private void writeGrpcRejection(ChannelHandlerContext ctx, Http2HeadersFrame request, String message) {

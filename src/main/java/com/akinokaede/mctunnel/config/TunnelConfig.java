@@ -2,9 +2,10 @@ package com.akinokaede.mctunnel.config;
 
 public final class TunnelConfig {
 	public static final String VANILLA_PROTOCOL_ID = "vanilla";
+	public static final String DEFAULT_SERVER_PROTOCOLS = "websocket,httpupgrade,grpc,vanilla";
 
 	public static final String SERVER_PROTOCOLS =
-			System.getProperty("mctunnel.protocol", System.getProperty("mctunnel.protocols", "websocket,httpupgrade,vanilla"));
+			System.getProperty("mctunnel.protocol", System.getProperty("mctunnel.protocols", DEFAULT_SERVER_PROTOCOLS));
 
 	public static final String SERVER_ENDPOINT =
 			blankToNull(System.getProperty("mctunnel.endpoint"));
@@ -27,15 +28,6 @@ public final class TunnelConfig {
 
 	public static boolean serverProtocolEnabled(String protocolId) {
 		if (SERVER_PROTOCOLS == null) {
-			return false;
-		}
-
-		boolean grpcEnabled = containsProtocol("grpc");
-		if (grpcEnabled) {
-			return "grpc".equals(protocolId);
-		}
-
-		if ("grpc".equals(protocolId)) {
 			return false;
 		}
 

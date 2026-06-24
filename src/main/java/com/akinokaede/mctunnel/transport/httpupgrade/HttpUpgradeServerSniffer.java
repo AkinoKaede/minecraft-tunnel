@@ -1,75 +1,112 @@
 package com.akinokaede.mctunnel.transport.httpupgrade;
 
 import com.akinokaede.mctunnel.MinecraftTunnel;
-import com.akinokaede.mctunnel.config.TunnelConfig;
+import com.akinokaede.mctunnel.transport.HttpTunnelResponses;
 import com.akinokaede.mctunnel.transport.TunnelConnectionMetadata;
 import com.akinokaede.mctunnel.transport.TunnelProtocols;
 import com.akinokaede.mctunnel.transport.websocket.WebSocketServerHandshake;
 import com.akinokaede.mctunnel.transport.websocket.WebSocketHandshakeValidator;
 import com.akinokaede.mctunnel.transport.websocket.WebSocketTunnelProtocol;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelPipeline;
-import io.netty.handler.codec.ByteToMessageDecoder;
-import io.netty.handler.codec.http.DefaultFullHttpResponse;
-import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequest;
-import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpServerCodec;
-import io.netty.handler.codec.http.HttpVersion;
-import io.netty.util.CharsetUtil;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.function.Consumer;
 
-public final class HttpUpgradeServerSniffer extends ByteToMessageDecoder {
-	private static final String SNIFFER = "McTunnelHttpUpgradeSniffer";
+public final class HttpUpgradeServerSniffer {
 	private static final String CODEC = "McTunnelHttpServer";
 	private static final String ROUTER = "McTunnelHttpUpgradeRouter";
+	private static final byte[] HTTP_GET_PREFIX = "GET ".getBytes(StandardCharsets.US_ASCII);
 
-	private final Consumer<TunnelConnectionMetadata> metadataConsumer;
-
-	private HttpUpgradeServerSniffer(Consumer<TunnelConnectionMetadata> metadataConsumer) {
-		this.metadataConsumer = metadataConsumer;
+	private HttpUpgradeServerSniffer() {
 	}
 
-	public static void install(ChannelPipeline pipeline, Consumer<TunnelConnectionMetadata> metadataConsumer) {
-		if (pipeline.get(SNIFFER) == null && pipeline.get(CODEC) == null && pipeline.get(ROUTER) == null) {
-			pipeline.addAfter("timeout", SNIFFER, new HttpUpgradeServerSniffer(metadataConsumer));
+	public static void install(ChannelPipeline pipeline, ChannelHandler oldHandler, Consumer<TunnelConnectionMetadata> metadataConsumer) {
+		if (pipeline.get(CODEC) == null && pipeline.get(ROUTER) == null) {
+			pipeline.replace(oldHandler, CODEC, new HttpServerCodec());
+			pipeline.addAfter(CODEC, "McTunnelHttpAggregator", new HttpObjectAggregator(8192 * 4));
+			pipeline.addAfter("McTunnelHttpAggregator", ROUTER, new Router(metadataConsumer));
 		}
 	}
 
-	@Override
-	protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
-		if (in.readableBytes() < 3) {
-			return;
+	public static boolean isCandidate(ByteBuf in) {
+		return prefixMatches(in, HTTP_GET_PREFIX);
+	}
+
+	public static boolean isIncompleteCandidate(ByteBuf in) {
+		return isIncompletePrefix(in, HTTP_GET_PREFIX) || (isCandidate(in) && findHeaderEnd(in) < 0);
+	}
+
+	public static boolean hasCompleteCandidate(ByteBuf in) {
+		int headerEnd = findHeaderEnd(in);
+		return isCandidate(in) && headerEnd >= 0 && isHttpGetRequestLine(in, headerEnd);
+	}
+
+	private static boolean prefixMatches(ByteBuf in, byte[] prefix) {
+		int readableBytes = in.readableBytes();
+		if (readableBytes == 0) {
+			return false;
 		}
 
 		in.markReaderIndex();
-		byte[] bytes = new byte[3];
-		in.readBytes(bytes);
+		int bytesToCompare = Math.min(readableBytes, prefix.length);
+		boolean matches = true;
+		for (int i = 0; i < bytesToCompare; i++) {
+			byte actual = in.readByte();
+			if (toUpperAscii(actual) != prefix[i]) {
+				matches = false;
+				break;
+			}
+		}
 		in.resetReaderIndex();
+		return matches;
+	}
 
-		String methodPrefix = new String(bytes, StandardCharsets.US_ASCII);
-		if ("GET".equalsIgnoreCase(methodPrefix)) {
-			MinecraftTunnel.debug("Incoming HTTP Upgrade tunnel candidate");
-			ctx.pipeline().replace(this, CODEC, new HttpServerCodec());
-			ctx.pipeline().addAfter(CODEC, "McTunnelHttpAggregator", new HttpObjectAggregator(8192 * 4));
-			ctx.pipeline().addAfter("McTunnelHttpAggregator", ROUTER, new Router(metadataConsumer));
-			return;
+	private static boolean isIncompletePrefix(ByteBuf in, byte[] prefix) {
+		return in.readableBytes() < prefix.length && prefixMatches(in, prefix);
+	}
+
+	private static int findHeaderEnd(ByteBuf in) {
+		int readerIndex = in.readerIndex();
+		int writerIndex = in.writerIndex();
+		for (int i = readerIndex; i <= writerIndex - 4; i++) {
+			if (in.getByte(i) == '\r'
+					&& in.getByte(i + 1) == '\n'
+					&& in.getByte(i + 2) == '\r'
+					&& in.getByte(i + 3) == '\n') {
+				return i;
+			}
+		}
+		return -1;
+	}
+
+	private static boolean isHttpGetRequestLine(ByteBuf in, int headerEnd) {
+		int readerIndex = in.readerIndex();
+		int lineEnd = -1;
+		for (int i = readerIndex; i < headerEnd - 1; i++) {
+			if (in.getByte(i) == '\r' && in.getByte(i + 1) == '\n') {
+				lineEnd = i;
+				break;
+			}
+		}
+		if (lineEnd < 0) {
+			return false;
 		}
 
-		if (TunnelConfig.vanillaEnabled()) {
-			MinecraftTunnel.debug("Incoming vanilla TCP connection");
-			ctx.pipeline().remove(this);
-		} else {
-			MinecraftTunnel.debug("Rejecting connection because vanilla TCP is not enabled");
-			ctx.close();
+		String requestLine = in.toString(readerIndex, lineEnd - readerIndex, StandardCharsets.US_ASCII);
+		return requestLine.regionMatches(true, 0, "GET ", 0, HTTP_GET_PREFIX.length)
+				&& (requestLine.endsWith(" HTTP/1.1") || requestLine.endsWith(" HTTP/1.0"));
+	}
+
+	private static byte toUpperAscii(byte value) {
+		if (value >= 'a' && value <= 'z') {
+			return (byte) (value - ('a' - 'A'));
 		}
+		return value;
 	}
 
 	private static final class Router extends io.netty.channel.ChannelInboundHandlerAdapter {
@@ -105,14 +142,7 @@ public final class HttpUpgradeServerSniffer extends ByteToMessageDecoder {
 		}
 
 		private static void writeDefaultHttpResponse(ChannelHandlerContext ctx) {
-			DefaultFullHttpResponse response = new DefaultFullHttpResponse(
-					HttpVersion.HTTP_1_1,
-					HttpResponseStatus.OK,
-					Unpooled.copiedBuffer("Minecraft Tunnel", CharsetUtil.UTF_8));
-			response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=UTF-8");
-			response.headers().set(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
-			response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE);
-			ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+			HttpTunnelResponses.writeDefaultAndClose(ctx);
 		}
 	}
 }

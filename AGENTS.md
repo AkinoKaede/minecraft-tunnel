@@ -23,7 +23,7 @@ Source is Java 25 with UTF-8 encoding. Follow the existing style: tabs for inden
 
 ## Testing Guidelines
 
-There is currently no dedicated `src/test` tree. Treat `./gradlew build` for each affected loader as the minimum verification step because packaging rules differ by loader. When adding tests, prefer standard Gradle test source sets and name test classes after the subject, for example `TunnelConfigTest`. For networking changes, include manual validation notes for the affected schemes (`ws://`, `wss://`, `httpupgrade://`, `grpc://`, `grpc+h2c://`, or `tls://`).
+Run the relevant Gradle unit tests for every code change, for example `cd src && ./gradlew test`, before considering the change complete. Treat `./gradlew build` for each affected loader as the packaging verification step because packaging rules differ by loader. Prefer standard Gradle test source sets and name test classes after the subject, for example `TunnelConfigTest`. For networking changes, include manual validation notes for the affected schemes (`ws://`, `wss://`, `httpupgrade://`, `grpc://`, `grpc+h2c://`, or `tls://`).
 
 ## Commit & Pull Request Guidelines
 

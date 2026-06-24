@@ -69,8 +69,8 @@ overhead than WebSocket.
 ### WebSocket
 
 ```text
-ws://example.com:25565/mc
-wss://example.com/mc
+ws://example.com:25565/MinecraftTunnel
+wss://example.com/MinecraftTunnel
 ```
 
 `ws://` uses cleartext WebSocket. `wss://` uses TLS and WebSocket.
@@ -78,8 +78,8 @@ wss://example.com/mc
 ### HTTP Upgrade
 
 ```text
-httpupgrade://example.com:25565/mc
-httpupgrades://example.com/mc
+httpupgrade://example.com:25565/MinecraftTunnel
+httpupgrades://example.com/MinecraftTunnel
 ```
 
 `httpupgrade://` performs an HTTP/1.1 Upgrade handshake and then carries raw
@@ -130,10 +130,10 @@ and TLS SNI value.
 
 ```text
 tls://sni.example@203.0.113.10:25565
-ws://host.example@203.0.113.10/mc
-wss://sni.example:host.example@203.0.113.10/mc
-httpupgrade://host.example@203.0.113.10/mc
-httpupgrades://sni.example:host.example@203.0.113.10/mc
+ws://host.example@203.0.113.10/MinecraftTunnel
+wss://sni.example:host.example@203.0.113.10/MinecraftTunnel
+httpupgrade://host.example@203.0.113.10/MinecraftTunnel
+httpupgrades://sni.example:host.example@203.0.113.10/MinecraftTunnel
 grpc+h2c://host.example@203.0.113.10/MinecraftTunnel
 grpc://sni.example:host.example@203.0.113.10/MinecraftTunnel
 ```
@@ -148,7 +148,7 @@ Instead of asking players to type a tunnel URI, publish a DNS `URI` record for
 the Minecraft service name:
 
 ```text
-_minecraft._tcp.example.com. 300 IN URI 10 1 "wss://edge.example.com/mc"
+_minecraft._tcp.example.com. 300 IN URI 10 1 "wss://edge.example.com/MinecraftTunnel"
 ```
 
 Players can then connect to `example.com`. If the record target is a supported
@@ -163,7 +163,7 @@ priority values first, then higher weight values.
 ## Server Behavior
 
 The Minecraft server port accepts the protocols listed in `mctunnel.protocol`.
-By default this is normal Minecraft TCP plus WebSocket and HTTP Upgrade.
+By default this is normal Minecraft TCP plus WebSocket, HTTP Upgrade, and gRPC.
 
 WebSocket requests are accepted as standard WebSocket binary streams. HTTP
 Upgrade requests are accepted as raw byte streams after `101 Switching
@@ -172,9 +172,7 @@ long-lived bidirectional stream.
 
 For `grpc://`, terminate TLS and ALPN in front of the Minecraft server and
 forward HTTP/2 cleartext to the Minecraft port. For direct cleartext HTTP/2,
-use `grpc+h2c://`. gRPC mode is exclusive: if `grpc` appears in
-`mctunnel.protocol`, the server installs the gRPC HTTP/2 pipeline directly and
-does not accept vanilla TCP, WebSocket, or HTTP Upgrade on that listener.
+use `grpc+h2c://`.
 
 ## Configuration
 
@@ -182,7 +180,7 @@ Configuration is provided with Java system properties.
 
 | Property | Side | Default | Description |
 | --- | --- | --- | --- |
-| `mctunnel.protocol` | Server | `websocket,httpupgrade,vanilla` | Comma-separated list of enabled server protocols. Supported values: `websocket`, `ws`, `httpupgrade`, `vanilla`, `grpc`. If `grpc` is present, it is exclusive and other values are ignored. |
+| `mctunnel.protocol` | Server | `websocket,httpupgrade,grpc,vanilla` | Comma-separated list of enabled server protocols. Supported values: `websocket`, `ws`, `httpupgrade`, `vanilla`, `grpc`. |
 | `mctunnel.endpoint` | Server | any path | If set, only this exact tunnel path is accepted. For gRPC, either `/Service` or `/Service/Tun` matches the same method. |
 | `mctunnel.trustedProxies` | Server | empty | Comma-separated trusted proxy IP/CIDR ranges allowed to supply `X-Forwarded-For` or `X-Real-IP`. Example: `127.0.0.1/32,10.0.0.0/8,::1/128`. |
 | `mctunnel.userAgent` | Client | generated | Override the `User-Agent` sent by HTTP-based client tunnels. By default it is generated as `MinecraftTunnel/<mod version> Minecraft/<game version> <loader>/<loader version> Netty/<netty version>`. |
@@ -192,8 +190,8 @@ Configuration is provided with Java system properties.
 Example:
 
 ```bash
-java -Dmctunnel.protocol=websocket,httpupgrade,vanilla \
-  -Dmctunnel.endpoint=/mc \
+java -Dmctunnel.protocol=websocket,httpupgrade,grpc,vanilla \
+  -Dmctunnel.endpoint=/MinecraftTunnel \
   -Dmctunnel.trustedProxies=127.0.0.1/32,10.0.0.0/8 \
   -jar server.jar
 ```

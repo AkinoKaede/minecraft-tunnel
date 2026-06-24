@@ -85,6 +85,11 @@ dependencies {
 			prefer project.dnsjava_version
 		}
 	}
+
+	testImplementation "org.junit.jupiter:junit-jupiter:${project.junit_version}"
+	testImplementation "io.netty:netty-codec-http:${project.netty_version}"
+	testImplementation "io.netty:netty-codec-http2:${project.netty_version}"
+	testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
@@ -113,11 +118,21 @@ sourceSets {
 			srcDir "../src/main/resources"
 		}
 	}
+	test {
+		java {
+			srcDir "../src/test/java"
+		}
+	}
 }
 
 tasks.withType(JavaCompile).configureEach {
 	options.encoding = "UTF-8"
 	options.release = 25
+}
+
+tasks.withType(Test).configureEach {
+	useJUnitPlatform()
+	systemProperty "mctunnel.endpoint", "/MinecraftTunnel"
 }
 
 java {
