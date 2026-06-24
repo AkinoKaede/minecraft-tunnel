@@ -1,11 +1,13 @@
 modLoader="javafml"
 loaderVersion="[${forge_loader_version_min},)"
 license="Apache-2.0"
+issueTrackerURL="${issues_url}"
 
 [[mods]]
 modId="minecraft_tunnel"
 version="${mod_version}"
 displayName="Minecraft Tunnel"
+displayURL="${homepage_url}"
 authors="Kaede Akino"
 description='''Tunnel transports for Minecraft connections, including TLS-wrapped vanilla TCP, WebSocket, HTTP Upgrade, and gRPC.'''
 

@@ -8,6 +8,11 @@
     "Kaede Akino"
   ],
   "license": "Apache-2.0",
+  "contact": {
+    "homepage": "${homepage_url}",
+    "sources": "${sources_url}",
+    "issues": "${issues_url}"
+  },
   "environment": "*",
   "entrypoints": {
     "main": [
