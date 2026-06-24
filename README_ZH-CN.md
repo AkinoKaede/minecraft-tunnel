@@ -22,10 +22,10 @@ WebSocket、HTTP Upgrade、基于 HTTP/2 的 gRPC，或套在 TLS 中的原版 T
 
 | 加载器 | 端 | 构件 |
 | --- | --- | --- |
-| Fabric | 客户端和服务端 | `minecraft-tunnel-0.2.0+26.1.2+fabric.jar` |
-| Forge | 客户端和服务端 | `minecraft-tunnel-0.2.0+26.1.2+forge.jar` |
-| NeoForge | 客户端和服务端 | `minecraft-tunnel-0.2.0+26.1.2+neoforge.jar` |
-| Ignite | 服务端 | `minecraft-tunnel-0.2.0+26.1.2+ignite.jar` |
+| Fabric | 客户端和服务端 | `minecraft-tunnel-0.2.1+26.1.2+fabric.jar` |
+| Forge | 客户端和服务端 | `minecraft-tunnel-0.2.1+26.1.2+forge.jar` |
+| NeoForge | 客户端和服务端 | `minecraft-tunnel-0.2.1+26.1.2+neoforge.jar` |
+| Ignite | 服务端 | `minecraft-tunnel-0.2.1+26.1.2+ignite.jar` |
 
 Minecraft 版本范围：`>=26.1.2 <26.2`。
 
@@ -207,10 +207,10 @@ cd ignite
 主 jar 会写入：
 
 ```text
-fabric/build/libs/minecraft-tunnel-0.2.0+26.1.2+fabric.jar
-forge/build/libs/minecraft-tunnel-0.2.0+26.1.2+forge.jar
-neoforge/build/libs/minecraft-tunnel-0.2.0+26.1.2+neoforge.jar
-ignite/build/libs/minecraft-tunnel-0.2.0+26.1.2+ignite.jar
+fabric/build/libs/minecraft-tunnel-0.2.1+26.1.2+fabric.jar
+forge/build/libs/minecraft-tunnel-0.2.1+26.1.2+forge.jar
+neoforge/build/libs/minecraft-tunnel-0.2.1+26.1.2+neoforge.jar
+ignite/build/libs/minecraft-tunnel-0.2.1+26.1.2+ignite.jar
 ```
 
 ## 许可证
